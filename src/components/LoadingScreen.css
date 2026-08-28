@@ -1,0 +1,134 @@
+.loading-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: radial-gradient(circle at 50% 40%, var(--bg-surface), var(--bg-app));
+  text-align: center;
+  padding: 24px;
+}
+
+.loading-screen__mark {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+}
+
+.loading-screen__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid var(--border-glass);
+  border-top-color: var(--accent);
+  animation: spin 0.9s linear infinite;
+}
+
+.loading-screen__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.loading-screen__message {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  max-width: 320px;
+}
+
+.loading-screen__message--error {
+  color: var(--danger);
+}
+
+.loading-screen__disclaimer {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 340px;
+}
+
+.loading-screen__proceed {
+  padding: 12px 28px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-glass);
+  background: var(--accent);
+  color: #0b1220;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: filter 0.15s ease;
+}
+
+.loading-screen__proceed:hover {
+  filter: brightness(1.08);
+}
+
+.loading-screen__footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.loading-screen__partners {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading-screen__partners-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.loading-screen__logos {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.loading-screen__logo-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 4px 7px;
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  box-shadow: var(--shadow-lg);
+}
+
+.loading-screen__logo-chip img {
+  max-height: 100%;
+  max-width: 60px;
+  object-fit: contain;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-screen__ring {
+    animation: none;
+  }
+}

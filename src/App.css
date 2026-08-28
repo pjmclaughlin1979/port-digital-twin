@@ -1,0 +1,69 @@
+.app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+.scene-container {
+  position: absolute;
+  inset: 0;
+}
+
+.right-rail {
+  position: absolute;
+  /* Clear the layer list toggle button, which permanently occupies the
+     top-right corner. */
+  top: 64px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 16px;
+  pointer-events: none;
+}
+
+.right-rail > * {
+  pointer-events: auto;
+}
+
+.widget-toggle {
+  position: absolute;
+  z-index: 20;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border-glass);
+  background: var(--bg-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: background 0.15s ease;
+}
+
+.widget-toggle:hover {
+  background: rgba(22, 30, 40, 0.75);
+}
+
+.widget-toggle--carousel {
+  bottom: 16px;
+  right: 16px;
+  /* Float above the carousel's own scrolling content, which sits at
+     z-index 20 and spans the full width of the screen. */
+  z-index: 21;
+}
+
+/* Esri widgets inherit the dark theme; nudge focus rings to match the
+   app's accent so Search/Legend feel native rather than bolted on. */
+.esri-widget--button:focus-visible,
+.esri-search__submit-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}

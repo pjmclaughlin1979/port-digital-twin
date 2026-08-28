@@ -1,0 +1,105 @@
+.widget-carousel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* Leave the SceneView's own attribution bar (data source / copyright
+     credits) visible in the strip below the carousel instead of
+     covering it. */
+  bottom: 24px;
+  z-index: 20;
+  height: 90px;
+  overflow: hidden;
+  /* More transparent at rest so the scene reads through; hovering
+     restores the panel's normal glass shade for readability. */
+  background: rgba(22, 30, 40, 0.22);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-lg);
+  transition: background 0.2s ease;
+}
+
+.widget-carousel:hover {
+  background: var(--bg-glass);
+}
+
+.widget-carousel__track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  width: max-content;
+  animation: widget-carousel-scroll 56s linear infinite;
+}
+
+.widget-carousel__track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes widget-carousel-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.widget-carousel__card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 28px;
+  border-right: 1px solid var(--border-glass);
+  white-space: nowrap;
+}
+
+.widget-carousel__icon {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.widget-carousel__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.widget-carousel__title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.widget-carousel__subtitle {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+@media (max-width: 640px) {
+  .widget-carousel {
+    height: 72px;
+  }
+
+  .widget-carousel__card {
+    gap: 10px;
+    padding: 0 18px;
+  }
+
+  .widget-carousel__icon {
+    font-size: 1.5rem;
+  }
+
+  .widget-carousel__title {
+    font-size: 0.85rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .widget-carousel__track {
+    animation: none;
+  }
+}

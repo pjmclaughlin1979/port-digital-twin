@@ -1,0 +1,11 @@
+node_modules
+dist
+.DS_Store
+*.local
+
+# Unrelated project that happens to live alongside this one; it has its
+# own separate git repository and should never be tracked here.
+/capacity-map/
+
+# Personal Claude Code permission overrides, not shared project config.
+.claude/settings.local.json
