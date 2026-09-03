@@ -2,6 +2,53 @@ import { useState } from "react";
 import { SailboatIcon, CloseWidgetsIcon } from "./icons.jsx";
 import "./SidePanel.css";
 
+function formatMovementTime(epochMs) {
+  if (!epochMs) return "—";
+  const date = new Date(epochMs);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString(undefined, {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function MovementGroup({ title, items, onSelectMovement }) {
+  return (
+    <div className="side-panel__movement-group">
+      <h3 className="side-panel__movement-group-title">
+        {title} ({items.length})
+      </h3>
+      {items.length > 0 ? (
+        <ul className="side-panel__movement-list">
+          {items.map((item, index) => (
+            <li key={`${item.VESSEL}-${item.SRT}-${index}`}>
+              <button
+                type="button"
+                className="side-panel__movement"
+                onClick={() => onSelectMovement?.(item)}
+              >
+                <div className="side-panel__movement-row">
+                  <span className="side-panel__movement-vessel">{item.VESSEL}</span>
+                  <span className="side-panel__movement-time">
+                    {formatMovementTime(item.SRT)}
+                  </span>
+                </div>
+                <span className="side-panel__movement-route">
+                  {item.FROM_LOC?.trim() || "—"} &rarr; {item.TO_LOC?.trim() || "—"}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="side-panel__vessel-empty">None scheduled.</p>
+      )}
+    </div>
+  );
+}
+
 export default function SidePanel({
   isOpen,
   onToggle,
@@ -10,11 +57,13 @@ export default function SidePanel({
   status,
   vessels = [],
   onSelectVessel,
-  slides = [],
-  onSelectSlide,
+  movements,
+  onSelectMovement,
 }) {
   const [isVesselsOpen, setIsVesselsOpen] = useState(true);
-  const [isSlidesOpen, setIsSlidesOpen] = useState(true);
+  const [isMovementsOpen, setIsMovementsOpen] = useState(false);
+  const { status: movementsStatus, arrivals = [], departures = [], other = [] } =
+    movements ?? {};
   return (
     <>
       {status === "ready" && (
@@ -98,46 +147,58 @@ export default function SidePanel({
             </section>
           )}
 
-          {status === "ready" && slides.length > 0 && (
-            <section className="side-panel__section" aria-label="Bookmarks">
+          {status === "ready" && (
+            <section className="side-panel__section" aria-label="Shipping schedule">
               <button
                 type="button"
                 className="side-panel__section-toggle"
-                onClick={() => setIsSlidesOpen((open) => !open)}
-                aria-expanded={isSlidesOpen}
-                aria-controls="scene-slides-body"
+                onClick={() => setIsMovementsOpen((open) => !open)}
+                aria-expanded={isMovementsOpen}
+                aria-controls="scene-movements-body"
               >
                 <h2 className="side-panel__section-title">
-                  Bookmarks ({slides.length})
+                  Shipping schedule ({arrivals.length + departures.length + other.length})
                 </h2>
                 <span
                   className={`side-panel__chevron ${
-                    isSlidesOpen ? "side-panel__chevron--open" : ""
+                    isMovementsOpen ? "side-panel__chevron--open" : ""
                   }`}
                   aria-hidden="true"
                 />
               </button>
-              {isSlidesOpen && (
-                <ul id="scene-slides-body" className="side-panel__slide-list">
-                  {slides.map((slide) => (
-                    <li key={slide.id}>
-                      <button
-                        type="button"
-                        className="side-panel__slide"
-                        onClick={() => onSelectSlide?.(slide)}
-                      >
-                        {slide.thumbnailUrl && (
-                          <img
-                            className="side-panel__slide-thumbnail"
-                            src={slide.thumbnailUrl}
-                            alt=""
-                          />
-                        )}
-                        <span className="side-panel__slide-title">{slide.title}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+              {isMovementsOpen && (
+                <div id="scene-movements-body" className="side-panel__movements-body">
+                  {movementsStatus === "loading" &&
+                    arrivals.length === 0 &&
+                    departures.length === 0 &&
+                    other.length === 0 && (
+                      <p className="side-panel__vessel-empty">Loading…</p>
+                    )}
+                  {movementsStatus === "error" && (
+                    <p className="side-panel__vessel-empty">
+                      Unable to load the shipping schedule.
+                    </p>
+                  )}
+                  {movementsStatus !== "loading" && movementsStatus !== "error" && (
+                    <>
+                      <MovementGroup
+                        title="Arrivals"
+                        items={arrivals}
+                        onSelectMovement={onSelectMovement}
+                      />
+                      <MovementGroup
+                        title="Departures"
+                        items={departures}
+                        onSelectMovement={onSelectMovement}
+                      />
+                      <MovementGroup
+                        title="Other"
+                        items={other}
+                        onSelectMovement={onSelectMovement}
+                      />
+                    </>
+                  )}
+                </div>
               )}
             </section>
           )}

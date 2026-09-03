@@ -23,6 +23,16 @@
   background: rgba(22, 30, 40, 0.75);
 }
 
+.layer-list-toggle[aria-expanded="true"] {
+  background: var(--toggle-active-bg);
+  border-color: var(--toggle-active-border);
+  color: #ffffff;
+}
+
+.layer-list-toggle[aria-expanded="true"]:hover {
+  background: var(--toggle-active-border);
+}
+
 .layer-list-panel {
   position: absolute;
   top: 0;

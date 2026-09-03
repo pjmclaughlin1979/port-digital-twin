@@ -24,6 +24,30 @@ export function SailboatIcon(props) {
   );
 }
 
+// A plain bookmark ribbon glyph for the Bookmarks toggle.
+export function BookmarkIcon(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path
+        d="M6.5 3.5h11a1 1 0 0 1 1 1V21l-6.5-4-6.5 4V4.5a1 1 0 0 1 1-1z"
+        fill="currentColor"
+        fillOpacity="0.22"
+      />
+    </svg>
+  );
+}
+
 // Matches the small "×" close affordance Esri widgets (Legend, Expand,
 // popups, etc.) show in their corner when open.
 export function CloseWidgetsIcon(props) {
@@ -62,6 +86,28 @@ export function LayerListIcon(props) {
       <path d="M12 3.5l8.5 4.5-8.5 4.5L3.5 8z" fill="currentColor" fillOpacity="0.22" />
       <path d="M3.5 12.5L12 17l8.5-4.5" />
       <path d="M3.5 16.5L12 21l8.5-4.5" />
+    </svg>
+  );
+}
+
+// A plain circled "i" for the About/Info toggle.
+export function InfoIcon(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <circle cx="12" cy="12" r="8.5" />
+      <line x1="12" y1="11" x2="12" y2="16" />
+      <circle cx="12" cy="7.75" r="0.9" fill="currentColor" stroke="none" />
     </svg>
   );
 }

@@ -23,6 +23,16 @@
   background: rgba(22, 30, 40, 0.75);
 }
 
+.panel-toggle[aria-expanded="true"] {
+  background: var(--toggle-active-bg);
+  border-color: var(--toggle-active-border);
+  color: #ffffff;
+}
+
+.panel-toggle[aria-expanded="true"]:hover {
+  background: var(--toggle-active-border);
+}
+
 .side-panel {
   position: absolute;
   top: 0;
@@ -230,23 +240,37 @@
   color: var(--text-muted);
 }
 
-.side-panel__slide-list {
+.side-panel__movements-body {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.side-panel__movement-group-title {
+  margin: 0 0 6px 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.side-panel__movement-list {
   list-style: none;
-  margin: 10px 0 0 0;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-height: 260px;
+  max-height: 180px;
   overflow-y: auto;
 }
 
-.side-panel__slide {
+.side-panel__movement {
   width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px;
+  display: block;
+  padding: 8px 10px;
   border-radius: var(--radius-sm, 8px);
   border: none;
   background: rgba(255, 255, 255, 0.04);
@@ -256,33 +280,49 @@
   transition: background 0.15s ease;
 }
 
-.side-panel__slide:hover,
-.side-panel__slide:focus-visible {
+.side-panel__movement:hover,
+.side-panel__movement:focus-visible {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.side-panel__slide:focus-visible {
+.side-panel__movement:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: -2px;
 }
 
-.side-panel__slide:active {
+.side-panel__movement:active {
   background: rgba(255, 255, 255, 0.14);
 }
 
-.side-panel__slide-thumbnail {
-  flex-shrink: 0;
-  width: 56px;
-  height: 35px;
-  object-fit: cover;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
+.side-panel__movement-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.side-panel__slide-title {
+.side-panel__movement-vessel {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.side-panel__movement-time {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.side-panel__movement-route {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

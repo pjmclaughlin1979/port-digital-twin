@@ -2,7 +2,9 @@ import { useRef, useState } from "react";
 import { useArcGISView } from "./hooks/useArcGISView.js";
 import LoadingScreen from "./components/LoadingScreen.jsx";
 import SidePanel from "./components/SidePanel.jsx";
+import BookmarksPanel from "./components/BookmarksPanel.jsx";
 import LayerListPanel from "./components/LayerListPanel.jsx";
+import InfoPanel from "./components/InfoPanel.jsx";
 import WidgetCarousel from "./components/WidgetCarousel.jsx";
 import VesselDetailPanel from "./components/VesselDetailPanel.jsx";
 import { CloseWidgetsIcon, ShowWidgetsIcon } from "./components/icons.jsx";
@@ -15,6 +17,8 @@ export default function App() {
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [isCarouselOpen, setIsCarouselOpen] = useState(true);
   const [isLayerListOpen, setIsLayerListOpen] = useState(false);
+  const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [hasAcknowledgedDisclaimer, setHasAcknowledgedDisclaimer] = useState(false);
 
   const {
@@ -25,10 +29,12 @@ export default function App() {
     vessels,
     slides,
     weather,
+    movements,
     selectedVessel,
     zoomToVessel,
     applySlide,
     selectVessel,
+    selectMovementVessel,
     clearSelectedVessel,
   } = useArcGISView(
     mapContainerRef,
@@ -87,8 +93,16 @@ export default function App() {
         status={status}
         vessels={vessels}
         onSelectVessel={handleSelectVessel}
+        movements={movements}
+        onSelectMovement={selectMovementVessel}
+      />
+
+      <BookmarksPanel
+        isOpen={isBookmarksOpen}
+        onToggle={() => setIsBookmarksOpen((open) => !open)}
         slides={slides}
         onSelectSlide={applySlide}
+        status={status}
       />
 
       <LayerListPanel
@@ -96,6 +110,12 @@ export default function App() {
         onToggle={() => setIsLayerListOpen((open) => !open)}
         containerRef={layerListContainerRef}
         legendContainerRef={legendContainerRef}
+        status={status}
+      />
+
+      <InfoPanel
+        isOpen={isInfoOpen}
+        onToggle={() => setIsInfoOpen((open) => !open)}
         status={status}
       />
     </div>

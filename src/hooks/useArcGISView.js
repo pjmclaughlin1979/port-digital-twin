@@ -15,6 +15,28 @@ const VESSEL_REFRESH_INTERVAL_MS = 20000;
 // cadence. Sun movement over a shorter interval is imperceptible.
 const SUN_REFRESH_INTERVAL_MS = 60000;
 
+// Port of Cork's public "Shipping Schedule" feature service (from 40Geo's
+// Raptor Geo-IoT), the same one behind their ArcGIS Dashboards shipping
+// schedule: https://portofcork.maps.arcgis.com/apps/dashboards/6d8b6b74af134106839fb8a635483101
+const MOVEMENTS_SERVICE_URL =
+  "https://utility.arcgis.com/usrsvcs/servers/1c876bed756644a1b7916b0107d01cd8/rest/services/geoiot/port-of-cork-movements/FeatureServer/1";
+const MOVEMENTS_REFRESH_INTERVAL_MS = 60000;
+
+const VESSEL_OUT_FIELDS = [
+  "OBJECTID",
+  "NAME",
+  "TYPE",
+  "MMSI",
+  "CALLSIGN",
+  "DESTINATION",
+  "IMO",
+  "STATUS",
+  "SPEED",
+  "COURSE",
+  "HEADING",
+  "TIMESTAMP",
+];
+
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
 
 // Maps an Open-Meteo WMO weather code, plus live cloud cover (%) and
@@ -63,8 +85,16 @@ export function useArcGISView(
   const [vessels, setVessels] = useState([]);
   const [slides, setSlides] = useState([]);
   const [weather, setWeather] = useState({ status: "loading", error: null });
+  const [movements, setMovements] = useState({
+    status: "loading",
+    error: null,
+    arrivals: [],
+    departures: [],
+    other: [],
+  });
   const [selectedVessel, setSelectedVessel] = useState(null);
   const vesselOutlinesLayerRef = useRef(null);
+  const vesselsLayerRef = useRef(null);
   const applySunlightRef = useRef(null);
 
   useEffect(() => {
@@ -80,6 +110,57 @@ export function useArcGISView(
     let weatherStationaryHandle = null;
     let refreshIntervalId = null;
     let sunIntervalId = null;
+    let movementsIntervalId = null;
+
+    // Port arrivals/departures schedule — a plain REST query against a
+    // public feature service, unrelated to the WebScene itself, so it
+    // starts fetching immediately rather than waiting on the SDK/scene.
+    const refreshMovements = async () => {
+      setMovements((current) => ({ ...current, status: "loading", error: null }));
+      try {
+        const params = new URLSearchParams({
+          where: "MOVEMENT_STATUS <> 'COMPLETED'",
+          outFields: [
+            "MOVEMENT_STATUS",
+            "SRT",
+            "CONFIRMED",
+            "MOVE_TYPE",
+            "VESSEL",
+            "VESSEL_TYPE",
+            "VESSEL_LOA",
+            "FROM_LOC",
+            "TO_LOC",
+            "MOVEMENT_DRAUGHT",
+          ].join(","),
+          orderByFields: "SRT ASC",
+          resultRecordCount: "200",
+          f: "json",
+        });
+        const response = await fetch(`${MOVEMENTS_SERVICE_URL}/query?${params}`);
+        if (!response.ok) throw new Error(`Movements request failed (${response.status})`);
+        const data = await response.json();
+        if (cancelled) return;
+        if (data.error) throw new Error(data.error.message ?? "Movements query failed");
+
+        const records = (data.features ?? []).map((feature) => feature.attributes);
+        const arrivals = records.filter((r) => r.MOVE_TYPE === "ARRIVAL");
+        const departures = records.filter((r) => r.MOVE_TYPE === "DEPARTURE");
+        const other = records.filter(
+          (r) => r.MOVE_TYPE !== "ARRIVAL" && r.MOVE_TYPE !== "DEPARTURE"
+        );
+        setMovements({ status: "ready", error: null, arrivals, departures, other });
+      } catch (err) {
+        if (cancelled) return;
+        console.error("Failed to fetch shipping movements", err);
+        setMovements((prev) => ({
+          ...prev,
+          status: "error",
+          error: err?.message ?? "Failed to load the shipping schedule",
+        }));
+      }
+    };
+    refreshMovements();
+    movementsIntervalId = setInterval(refreshMovements, MOVEMENTS_REFRESH_INTERVAL_MS);
 
     async function bootstrap() {
       try {
@@ -322,6 +403,7 @@ export function useArcGISView(
         const vesselsLayer = webscene.allLayers.find(
           (layer) => layer.title === "Vessels" && layer.type === "feature"
         );
+        vesselsLayerRef.current = vesselsLayer ?? null;
 
         // "Related information" for a selected vessel — hull dimensions —
         // lives in a separate layer (keyed by the same MMSI), not on the
@@ -333,21 +415,6 @@ export function useArcGISView(
         if (vesselsLayer) {
           await view.whenLayerView(vesselsLayer);
           if (cancelled) return;
-
-          const VESSEL_OUT_FIELDS = [
-            "OBJECTID",
-            "NAME",
-            "TYPE",
-            "MMSI",
-            "CALLSIGN",
-            "DESTINATION",
-            "IMO",
-            "STATUS",
-            "SPEED",
-            "COURSE",
-            "HEADING",
-            "TIMESTAMP",
-          ];
 
           const refreshVessels = async () => {
             try {
@@ -429,6 +496,7 @@ export function useArcGISView(
       cancelled = true;
       if (refreshIntervalId) clearInterval(refreshIntervalId);
       if (sunIntervalId) clearInterval(sunIntervalId);
+      if (movementsIntervalId) clearInterval(movementsIntervalId);
       stationaryHandle?.remove();
       weatherStationaryHandle?.remove();
       legendWidget?.destroy();
@@ -515,6 +583,77 @@ export function useArcGISView(
 
   const clearSelectedVessel = useCallback(() => setSelectedVessel(null), []);
 
+  // Shipping schedule entries (arrivals/departures/other) only carry the
+  // vessel's name, not its MMSI/geometry, so look up its live AIS position
+  // by name to zoom to it and open the same detail panel a vessel-in-view
+  // click does. Falls back to a position-less entry (built from the
+  // schedule row itself) if the vessel isn't currently broadcasting AIS —
+  // e.g. a future scheduled arrival that hasn't reached the harbour yet.
+  const selectMovementVessel = useCallback(
+    async (movement) => {
+      const name = movement?.VESSEL?.trim();
+      if (!name) return;
+
+      const fallbackVessel = {
+        objectId: `movement-${name}-${movement.SRT}`,
+        name,
+        type: movement.VESSEL_TYPE || "Not available",
+        mmsi: null,
+        callsign: null,
+        destination: null,
+        imo: null,
+        status: movement.MOVEMENT_STATUS,
+        speed: null,
+        course: null,
+        heading: null,
+        timestamp: null,
+        geometry: null,
+      };
+
+      const vesselsLayer = vesselsLayerRef.current;
+      if (!vesselsLayer) {
+        selectVessel(fallbackVessel);
+        return;
+      }
+
+      try {
+        const safeName = name.replace(/'/g, "''");
+        const { features } = await vesselsLayer.queryFeatures({
+          where: `UPPER(TRIM(NAME)) = UPPER('${safeName}')`,
+          outFields: VESSEL_OUT_FIELDS,
+          returnGeometry: true,
+          num: 1,
+        });
+        const feature = features[0];
+        if (!feature) {
+          selectVessel(fallbackVessel);
+          return;
+        }
+        const vessel = {
+          objectId: feature.attributes.OBJECTID,
+          name: feature.attributes.NAME?.trim() || name,
+          type: feature.attributes.TYPE || fallbackVessel.type,
+          mmsi: feature.attributes.MMSI,
+          callsign: feature.attributes.CALLSIGN,
+          destination: feature.attributes.DESTINATION,
+          imo: feature.attributes.IMO,
+          status: feature.attributes.STATUS,
+          speed: feature.attributes.SPEED,
+          course: feature.attributes.COURSE,
+          heading: feature.attributes.HEADING,
+          timestamp: feature.attributes.TIMESTAMP,
+          geometry: feature.geometry,
+        };
+        zoomToVessel(vessel);
+        selectVessel(vessel);
+      } catch (err) {
+        console.error("Failed to find live position for shipping schedule vessel", err);
+        selectVessel(fallbackVessel);
+      }
+    },
+    [zoomToVessel, selectVessel]
+  );
+
   return {
     status,
     error,
@@ -522,11 +661,13 @@ export function useArcGISView(
     vessels,
     slides,
     weather,
+    movements,
     selectedVessel,
     viewRef,
     zoomToVessel,
     applySlide,
     selectVessel,
+    selectMovementVessel,
     clearSelectedVessel,
   };
 }
