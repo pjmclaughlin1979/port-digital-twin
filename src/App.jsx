@@ -17,7 +17,7 @@ export default function App() {
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [isCarouselOpen, setIsCarouselOpen] = useState(true);
   const [isLayerListOpen, setIsLayerListOpen] = useState(false);
-  const [isBookmarksOpen, setIsBookmarksOpen] = useState(false);
+  const [isBookmarksOpen, setIsBookmarksOpen] = useState(true);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [hasAcknowledgedDisclaimer, setHasAcknowledgedDisclaimer] = useState(false);
 
