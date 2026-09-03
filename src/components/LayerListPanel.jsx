@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { LayerListIcon } from "./icons.jsx";
+import { LayerListIcon, CloseWidgetsIcon } from "./icons.jsx";
 import "./LayerListPanel.css";
 
 export default function LayerListPanel({
@@ -35,7 +35,18 @@ export default function LayerListPanel({
       >
         <div className="layer-list-panel__content">
           <header className="layer-list-panel__header">
-            <h1 className="layer-list-panel__title">Layers</h1>
+            <div className="layer-list-panel__header-row">
+              <h1 className="layer-list-panel__title">Layers</h1>
+              <button
+                type="button"
+                className="layer-list-panel__close"
+                onClick={onToggle}
+                aria-label="Close Layers"
+                title="Close"
+              >
+                <CloseWidgetsIcon />
+              </button>
+            </div>
           </header>
 
           <section

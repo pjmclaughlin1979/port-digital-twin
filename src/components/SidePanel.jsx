@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SailboatIcon } from "./icons.jsx";
+import { SailboatIcon, CloseWidgetsIcon } from "./icons.jsx";
 import "./SidePanel.css";
 
 export default function SidePanel({
@@ -39,7 +39,18 @@ export default function SidePanel({
       >
         <div className="side-panel__content">
           <header className="side-panel__header">
-            <h1 className="side-panel__title">{title}</h1>
+            <div className="side-panel__header-row">
+              <h1 className="side-panel__title">{title}</h1>
+              <button
+                type="button"
+                className="side-panel__close"
+                onClick={onToggle}
+                aria-label="Close Vessel Finder"
+                title="Close"
+              >
+                <CloseWidgetsIcon />
+              </button>
+            </div>
             {description && <p className="side-panel__description">{description}</p>}
           </header>
 

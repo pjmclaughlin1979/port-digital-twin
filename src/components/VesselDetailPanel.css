@@ -113,3 +113,13 @@
   font-size: 0.8rem;
   color: var(--text-secondary);
 }
+
+.vessel-detail__link {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.vessel-detail__link:hover,
+.vessel-detail__link:focus-visible {
+  text-decoration: underline;
+}

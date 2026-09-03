@@ -50,7 +50,20 @@ export default function VesselDetailPanel({ vessel, onClose }) {
           </div>
           <div>
             <dt>IMO</dt>
-            <dd>{vessel.imo ?? "—"}</dd>
+            <dd>
+              {vessel.imo ? (
+                <a
+                  href={`https://www.marinetraffic.com/en/ais/details/ships/imo:${vessel.imo}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="vessel-detail__link"
+                >
+                  {vessel.imo}
+                </a>
+              ) : (
+                "—"
+              )}
+            </dd>
           </div>
           <div>
             <dt>Status</dt>

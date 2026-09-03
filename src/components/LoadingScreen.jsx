@@ -10,32 +10,19 @@ export default function LoadingScreen({ status, error, hasAcknowledgedDisclaimer
 
   return (
     <div className="loading-screen" role="status" aria-live="polite">
-      {hasAcknowledgedDisclaimer && (
-        <div className="loading-screen__mark" aria-hidden="true">
-          <span className="loading-screen__ring" />
-          <span className="loading-screen__dot" />
-        </div>
-      )}
+      <video
+        className="loading-screen__video"
+        src="https://www.portofcork.ie/wp-content/uploads/2022/09/Cover-Video-2.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        aria-hidden="true"
+      />
+      <div className="loading-screen__overlay" aria-hidden="true" />
 
-      {!hasAcknowledgedDisclaimer ? (
-        <>
-          <p className="loading-screen__disclaimer">
-            This application is for demonstration purposes only.
-          </p>
-          <button type="button" className="loading-screen__proceed" onClick={onProceed}>
-            Click to proceed
-          </button>
-        </>
-      ) : isError ? (
-        <p className="loading-screen__message loading-screen__message--error">
-          {error ?? "The scene failed to load."}
-        </p>
-      ) : (
-        <p className="loading-screen__message">Streaming the ArcGIS SDK and scene data&hellip;</p>
-      )}
-
-      <div className="loading-screen__footer">
-        <div className="loading-screen__partners">
+      <div className="loading-screen__content">
+        <div className="loading-screen__partners loading-screen__partners--top">
           <span className="loading-screen__partners-label">In partnership with</span>
           <div className="loading-screen__logos">
             <div className="loading-screen__logo-chip">
@@ -47,17 +34,43 @@ export default function LoadingScreen({ status, error, hasAcknowledgedDisclaimer
           </div>
         </div>
 
-        <div className="loading-screen__partners">
-          <span className="loading-screen__partners-label">Datasets provided by</span>
-          <div className="loading-screen__logos">
-            <div className="loading-screen__logo-chip">
-              <img src={fortyGeoLogo} alt="40Geo" />
-            </div>
-            <div className="loading-screen__logo-chip">
-              <img src={googleLogo} alt="Google" />
-            </div>
-            <div className="loading-screen__logo-chip">
-              <img src={openMeteoLogo} alt="Open-Meteo" />
+        {hasAcknowledgedDisclaimer && (
+          <div className="loading-screen__mark" aria-hidden="true">
+            <span className="loading-screen__ring" />
+            <span className="loading-screen__dot" />
+          </div>
+        )}
+
+        {!hasAcknowledgedDisclaimer ? (
+          <>
+            <p className="loading-screen__disclaimer">
+              This application is for demonstration purposes only.
+            </p>
+            <button type="button" className="loading-screen__proceed" onClick={onProceed}>
+              Click to proceed
+            </button>
+          </>
+        ) : isError ? (
+          <p className="loading-screen__message loading-screen__message--error">
+            {error ?? "The scene failed to load."}
+          </p>
+        ) : (
+          <p className="loading-screen__message">Streaming the ArcGIS SDK and scene data&hellip;</p>
+        )}
+
+        <div className="loading-screen__footer">
+          <div className="loading-screen__partners">
+            <span className="loading-screen__partners-label">Datasets provided by</span>
+            <div className="loading-screen__logos">
+              <div className="loading-screen__logo-chip">
+                <img src={fortyGeoLogo} alt="40Geo" />
+              </div>
+              <div className="loading-screen__logo-chip">
+                <img src={googleLogo} alt="Google" />
+              </div>
+              <div className="loading-screen__logo-chip">
+                <img src={openMeteoLogo} alt="Open-Meteo" />
+              </div>
             </div>
           </div>
         </div>
