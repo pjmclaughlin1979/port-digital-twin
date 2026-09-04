@@ -111,8 +111,6 @@ export function useArcGISView(
     let refreshIntervalId = null;
     let sunIntervalId = null;
     let movementsIntervalId = null;
-    let windLayer = null;
-    let windAnimationFrame = null;
 
     // Port arrivals/departures schedule — a plain REST query against a
     // public feature service, unrelated to the WebScene itself, so it
@@ -172,8 +170,6 @@ export function useArcGISView(
           LegendModule,
           ExpandModule,
           LayerListModule,
-          GraphicsLayerModule,
-          GraphicModule,
           configModule,
           reactiveUtilsModule,
         ] = await Promise.all([
@@ -182,8 +178,6 @@ export function useArcGISView(
           import("@arcgis/core/widgets/Legend.js"),
           import("@arcgis/core/widgets/Expand.js"),
           import("@arcgis/core/widgets/LayerList.js"),
-          import("@arcgis/core/layers/GraphicsLayer.js"),
-          import("@arcgis/core/Graphic.js"),
           import("@arcgis/core/config.js"),
           import("@arcgis/core/core/reactiveUtils.js"),
           import("@arcgis/core/assets/esri/themes/dark/main.css"),
@@ -217,8 +211,6 @@ export function useArcGISView(
         const Legend = LegendModule.default;
         const Expand = ExpandModule.default;
         const LayerList = LayerListModule.default;
-        const GraphicsLayer = GraphicsLayerModule.default;
-        const Graphic = GraphicModule.default;
         const reactiveUtils = reactiveUtilsModule;
 
         const webscene = new WebScene({
@@ -324,198 +316,6 @@ export function useArcGISView(
           }))
         );
 
-        // Live wind direction indicator, drawn as two parallel trails of
-        // slim streak markers grounded in the 3D scene itself (rather
-        // than a flat UI widget) — one teal trail for sustained wind, one
-        // amber trail for gusts, running alongside each other so their
-        // animation speeds can be compared directly, in the same
-        // streak-dash style and wind/gust colour convention as harbour
-        // wind stations like dublinbaybuoy.com. Each trail flows in the
-        // direction the wind is blowing *toward* (the reciprocal of the
-        // meteorological "from" bearing Open-Meteo reports) at a rate
-        // proportional to its own speed.
-        const WIND_MARKER_COUNT = 5;
-        // Spaced wide enough to read as a distinct fanned-out trail at the
-        // app's default harbour-overview zoom, not just up close.
-        const WIND_MARKER_SPACING_M = 220;
-        const WIND_CYCLE_M = WIND_MARKER_SPACING_M * WIND_MARKER_COUNT;
-        const WIND_LANE_OFFSET_M = 45; // lateral gap between the wind and gust trails
-        const WIND_ANIMATION_SPEED_SCALE = 4; // visual multiplier over real-world m/s
-
-        windLayer = new GraphicsLayer({
-          title: "Wind",
-          visible: false,
-          elevationInfo: { mode: "relative-to-ground", offset: 12 },
-        });
-        webscene.add(windLayer);
-
-        // A two-stroke "breeze" glyph — the familiar wavy, curling wind
-        // pictogram used by harbour wind stations like dublinbaybuoy.com
-        // and most weather icon sets — built as our own inline artwork
-        // (not a downloaded/licensed icon) so it can be freely recoloured
-        // and rotated per marker. Drawn flowing left-to-right by default;
-        // `angle` is applied with a -90° offset (see below) to align that
-        // with the compass bearing the wind is blowing toward.
-        const buildWindIconUrl = (color) => {
-          const svg =
-            `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'>` +
-            `<path d='M8 20 C 30 6, 55 6, 62 16 C 66 22, 60 26, 54 22' fill='none' stroke='${color}' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/>` +
-            `<path d='M8 42 C 36 24, 68 24, 78 36 C 83 43, 75 48, 68 43' fill='none' stroke='${color}' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/>` +
-            `</svg>`;
-          return `data:image/svg+xml,${encodeURIComponent(svg)}`;
-        };
-        const WIND_ICON_ASPECT = 60 / 100;
-        const windPopupTemplate = {
-          title: "Wind",
-          content: `Blowing from {windDirection}° at {windSpeed} km/h, gusting {gustSpeed} km/h`,
-        };
-        const makeWindMarker = (url, width) =>
-          new Graphic({
-            geometry: { type: "point", longitude: 0, latitude: 0 },
-            attributes: { windDirection: 0, windSpeed: 0, gustSpeed: 0 },
-            popupTemplate: windPopupTemplate,
-            symbol: {
-              type: "picture-marker",
-              url,
-              width,
-              height: width * WIND_ICON_ASPECT,
-              angle: 0,
-            },
-          });
-        const windIconUrl = buildWindIconUrl("#4fd1c5"); // teal — sustained wind
-        const gustIconUrl = buildWindIconUrl("#f5a623"); // amber — gust
-        const gustGraphics = Array.from({ length: WIND_MARKER_COUNT }, () =>
-          makeWindMarker(gustIconUrl, 30)
-        );
-        const windGraphics = Array.from({ length: WIND_MARKER_COUNT }, () =>
-          makeWindMarker(windIconUrl, 24)
-        );
-        windLayer.addMany(gustGraphics);
-        windLayer.addMany(windGraphics);
-
-        // Destination point a given bearing/distance from an origin, via
-        // the standard spherical "direct geodesic" formula — avoids
-        // pulling in the (much heavier) geometryEngine module just to
-        // nudge points a few tens of metres along a compass bearing.
-        const EARTH_RADIUS_M = 6378137;
-        const destinationPoint = (longitude, latitude, bearingDeg, distanceM) => {
-          const bearing = (bearingDeg * Math.PI) / 180;
-          const latRad = (latitude * Math.PI) / 180;
-          const lonRad = (longitude * Math.PI) / 180;
-          const angularDistance = distanceM / EARTH_RADIUS_M;
-          const destLatRad = Math.asin(
-            Math.sin(latRad) * Math.cos(angularDistance) +
-              Math.cos(latRad) * Math.sin(angularDistance) * Math.cos(bearing)
-          );
-          const destLonRad =
-            lonRad +
-            Math.atan2(
-              Math.sin(bearing) * Math.sin(angularDistance) * Math.cos(latRad),
-              Math.cos(angularDistance) - Math.sin(latRad) * Math.sin(destLatRad)
-            );
-          return { longitude: (destLonRad * 180) / Math.PI, latitude: (destLatRad * 180) / Math.PI };
-        };
-
-        const windState = {
-          // Lane origins (start of each trail), offset to either side of
-          // the camera's centre point so the two trails run side by side.
-          windOrigin: null,
-          gustOrigin: null,
-          travelDirection: 0,
-          windSpeed: 0,
-          gustSpeed: 0,
-        };
-        let windPhaseM = 0;
-        let gustPhaseM = 0;
-        let lastAnimationTs = null;
-
-        const advanceTrail = (graphics, origin, travelDirection, phaseM) => {
-          if (!origin) return;
-          for (let i = 0; i < WIND_MARKER_COUNT; i++) {
-            const distanceM = (i * WIND_MARKER_SPACING_M + phaseM) % WIND_CYCLE_M;
-            const { longitude, latitude } = destinationPoint(
-              origin.longitude,
-              origin.latitude,
-              travelDirection,
-              distanceM
-            );
-            graphics[i].geometry = { type: "point", longitude, latitude };
-          }
-        };
-
-        const animateWind = (timestamp) => {
-          windAnimationFrame = requestAnimationFrame(animateWind);
-          if (lastAnimationTs == null) lastAnimationTs = timestamp;
-          const dtSeconds = Math.min(0.25, (timestamp - lastAnimationTs) / 1000);
-          lastAnimationTs = timestamp;
-          if (!windState.windOrigin || !windState.gustOrigin) return;
-
-          windPhaseM =
-            (windPhaseM + (windState.windSpeed / 3.6) * WIND_ANIMATION_SPEED_SCALE * dtSeconds) %
-            WIND_CYCLE_M;
-          gustPhaseM =
-            (gustPhaseM + (windState.gustSpeed / 3.6) * WIND_ANIMATION_SPEED_SCALE * dtSeconds) %
-            WIND_CYCLE_M;
-
-          advanceTrail(windGraphics, windState.windOrigin, windState.travelDirection, windPhaseM);
-          advanceTrail(gustGraphics, windState.gustOrigin, windState.travelDirection, gustPhaseM);
-        };
-        windAnimationFrame = requestAnimationFrame(animateWind);
-
-        const updateWindGraphics = (longitude, latitude, windDirection, windSpeed, gustSpeed) => {
-          if (
-            longitude == null ||
-            latitude == null ||
-            windDirection == null ||
-            windSpeed == null
-          ) {
-            windLayer.visible = false;
-            return;
-          }
-          windLayer.visible = true;
-          const travelDirection = (windDirection + 180) % 360;
-          windState.travelDirection = travelDirection;
-          windState.windSpeed = windSpeed;
-          windState.gustSpeed = gustSpeed ?? windSpeed;
-          // Offset each trail's start point perpendicular to the flow
-          // direction so the two lanes run side by side instead of
-          // overlapping.
-          windState.windOrigin = destinationPoint(
-            longitude,
-            latitude,
-            travelDirection - 90,
-            WIND_LANE_OFFSET_M / 2
-          );
-          windState.gustOrigin = destinationPoint(
-            longitude,
-            latitude,
-            travelDirection + 90,
-            WIND_LANE_OFFSET_M / 2
-          );
-
-          const attributes = {
-            windDirection: Math.round(windDirection),
-            windSpeed: Math.round(windSpeed),
-            gustSpeed: gustSpeed != null ? Math.round(gustSpeed) : "—",
-          };
-          // The icon's own artwork flows left-to-right; rotate an extra
-          // -90° so that "flowing right" lines up with the compass
-          // bearing the wind is actually blowing toward.
-          const markerAngle = (travelDirection - 90 + 360) % 360;
-          const windWidth = Math.min(42, 20 + windSpeed * 0.7);
-          const gustWidth = Math.min(56, 26 + (gustSpeed ?? windSpeed) * 0.7);
-          for (let i = 0; i < WIND_MARKER_COUNT; i++) {
-            windGraphics[i].attributes = attributes;
-            windGraphics[i].symbol.width = windWidth;
-            windGraphics[i].symbol.height = windWidth * WIND_ICON_ASPECT;
-            windGraphics[i].symbol.angle = markerAngle;
-            gustGraphics[i].attributes = attributes;
-            gustGraphics[i].symbol.width = gustWidth;
-            gustGraphics[i].symbol.height = gustWidth * WIND_ICON_ASPECT;
-            gustGraphics[i].symbol.angle = markerAngle;
-          }
-        };
-
         // Weather for whatever the camera is currently looking at, via
         // Open-Meteo (free, no API key needed). Re-fetched each time the
         // view settles on a new viewpoint.
@@ -529,7 +329,7 @@ export function useArcGISView(
               3
             )}&longitude=${longitude.toFixed(
               3
-            )}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,weather_code,is_day,cloud_cover,precipitation&timezone=auto`;
+            )}&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,weather_code,is_day,cloud_cover,precipitation&timezone=auto`;
             // Sea surface temperature and tide-inclusive sea level height
             // come from Open-Meteo's separate Marine Weather API. Only
             // meaningful near open water, so a failure here (e.g. the
@@ -561,7 +361,6 @@ export function useArcGISView(
               humidity: current.relative_humidity_2m,
               windSpeed: current.wind_speed_10m,
               windDirection: current.wind_direction_10m,
-              windGust: current.wind_gusts_10m,
               weatherCode: current.weather_code,
               isDay: current.is_day === 1,
               observedAt: current.time,
@@ -575,13 +374,6 @@ export function useArcGISView(
               current.weather_code,
               current.cloud_cover,
               current.precipitation
-            );
-            updateWindGraphics(
-              longitude,
-              latitude,
-              current.wind_direction_10m,
-              current.wind_speed_10m,
-              current.wind_gusts_10m
             );
           } catch (err) {
             if (cancelled) return;
@@ -705,12 +497,10 @@ export function useArcGISView(
       if (refreshIntervalId) clearInterval(refreshIntervalId);
       if (sunIntervalId) clearInterval(sunIntervalId);
       if (movementsIntervalId) clearInterval(movementsIntervalId);
-      if (windAnimationFrame) cancelAnimationFrame(windAnimationFrame);
       stationaryHandle?.remove();
       weatherStationaryHandle?.remove();
       legendWidget?.destroy();
       layerListWidget?.destroy();
-      windLayer?.destroy();
       view?.destroy();
       viewRef.current = null;
       applySunlightRef.current = null;
