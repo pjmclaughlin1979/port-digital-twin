@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useArcGISView } from "./hooks/useArcGISView.js";
 import LoadingScreen from "./components/LoadingScreen.jsx";
 import SidePanel from "./components/SidePanel.jsx";
+import AssistantPanel from "./components/AssistantPanel.jsx";
 import BookmarksPanel from "./components/BookmarksPanel.jsx";
 import LayerListPanel from "./components/LayerListPanel.jsx";
 import InfoPanel from "./components/InfoPanel.jsx";
@@ -15,6 +16,7 @@ export default function App() {
   const legendContainerRef = useRef(null);
   const layerListContainerRef = useRef(null);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isCarouselOpen, setIsCarouselOpen] = useState(true);
   const [isLayerListOpen, setIsLayerListOpen] = useState(false);
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(true);
@@ -36,6 +38,7 @@ export default function App() {
     selectVessel,
     selectMovementVessel,
     clearSelectedVessel,
+    queryVessels,
   } = useArcGISView(
     mapContainerRef,
     legendContainerRef,
@@ -94,6 +97,16 @@ export default function App() {
         vessels={vessels}
         onSelectVessel={handleSelectVessel}
         movements={movements}
+        onSelectMovement={selectMovementVessel}
+      />
+
+      <AssistantPanel
+        isOpen={isAssistantOpen}
+        onToggle={() => setIsAssistantOpen((open) => !open)}
+        status={status}
+        queryVessels={queryVessels}
+        movements={movements}
+        onSelectVessel={handleSelectVessel}
         onSelectMovement={selectMovementVessel}
       />
 

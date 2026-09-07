@@ -1,18 +1,7 @@
 import { useState } from "react";
 import { SailboatIcon, CloseWidgetsIcon } from "./icons.jsx";
+import { formatMovementTime } from "../lib/formatMovementTime.js";
 import "./SidePanel.css";
-
-function formatMovementTime(epochMs) {
-  if (!epochMs) return "—";
-  const date = new Date(epochMs);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString(undefined, {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 
 function MovementGroup({ title, items, onSelectMovement }) {
   return (

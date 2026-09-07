@@ -112,6 +112,36 @@ export function InfoIcon(props) {
   );
 }
 
+// A chat bubble with a small spark, for the natural-language data
+// assistant toggle.
+export function AssistantIcon(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <path
+        d="M4 5.5h13a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5H10l-4 3.2V15.5H4A1.5 1.5 0 0 1 2.5 14V7A1.5 1.5 0 0 1 4 5.5z"
+        fill="currentColor"
+        fillOpacity="0.18"
+      />
+      <path
+        d="M18.5 3.2l.55 1.25 1.25.55-1.25.55-.55 1.25-.55-1.25L16.7 5l1.25-.55z"
+        fill="currentColor"
+        stroke="none"
+      />
+    </svg>
+  );
+}
+
 // A simple "app grid" glyph for the collapsed/hidden state — the same
 // shorthand ArcGIS Online uses to represent a set of widgets/panels.
 export function ShowWidgetsIcon(props) {

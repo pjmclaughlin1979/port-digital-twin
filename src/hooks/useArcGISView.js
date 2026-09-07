@@ -39,6 +39,26 @@ const VESSEL_OUT_FIELDS = [
 
 const clamp01 = (value) => Math.min(1, Math.max(0, value));
 
+// Shared shape for a vessel, however the underlying AIS feature was
+// fetched (the live "in view" refresh vs. an on-demand assistant query).
+function mapVesselFeature(feature) {
+  return {
+    objectId: feature.attributes.OBJECTID,
+    name: feature.attributes.NAME?.trim() || "Unnamed vessel",
+    type: feature.attributes.TYPE || "Not available",
+    mmsi: feature.attributes.MMSI,
+    callsign: feature.attributes.CALLSIGN,
+    destination: feature.attributes.DESTINATION,
+    imo: feature.attributes.IMO,
+    status: feature.attributes.STATUS,
+    speed: feature.attributes.SPEED,
+    course: feature.attributes.COURSE,
+    heading: feature.attributes.HEADING,
+    timestamp: feature.attributes.TIMESTAMP,
+    geometry: feature.geometry,
+  };
+}
+
 // Maps an Open-Meteo WMO weather code, plus live cloud cover (%) and
 // precipitation (mm), to a SceneView environment.weather autocast object
 // (SunnyWeather | CloudyWeather | FoggyWeather | RainyWeather | SnowyWeather).
@@ -437,21 +457,7 @@ export function useArcGISView(
                     screenPoint.y <= view.height
                   );
                 })
-                .map((feature) => ({
-                  objectId: feature.attributes.OBJECTID,
-                  name: feature.attributes.NAME?.trim() || "Unnamed vessel",
-                  type: feature.attributes.TYPE || "Not available",
-                  mmsi: feature.attributes.MMSI,
-                  callsign: feature.attributes.CALLSIGN,
-                  destination: feature.attributes.DESTINATION,
-                  imo: feature.attributes.IMO,
-                  status: feature.attributes.STATUS,
-                  speed: feature.attributes.SPEED,
-                  course: feature.attributes.COURSE,
-                  heading: feature.attributes.HEADING,
-                  timestamp: feature.attributes.TIMESTAMP,
-                  geometry: feature.geometry,
-                }))
+                .map(mapVesselFeature)
                 .sort(
                   (a, b) =>
                     a.type.localeCompare(b.type) || a.name.localeCompare(b.name)
@@ -629,21 +635,7 @@ export function useArcGISView(
           selectVessel(fallbackVessel);
           return;
         }
-        const vessel = {
-          objectId: feature.attributes.OBJECTID,
-          name: feature.attributes.NAME?.trim() || name,
-          type: feature.attributes.TYPE || fallbackVessel.type,
-          mmsi: feature.attributes.MMSI,
-          callsign: feature.attributes.CALLSIGN,
-          destination: feature.attributes.DESTINATION,
-          imo: feature.attributes.IMO,
-          status: feature.attributes.STATUS,
-          speed: feature.attributes.SPEED,
-          course: feature.attributes.COURSE,
-          heading: feature.attributes.HEADING,
-          timestamp: feature.attributes.TIMESTAMP,
-          geometry: feature.geometry,
-        };
+        const vessel = mapVesselFeature(feature);
         zoomToVessel(vessel);
         selectVessel(vessel);
       } catch (err) {
@@ -653,6 +645,27 @@ export function useArcGISView(
     },
     [zoomToVessel, selectVessel]
   );
+
+  // On-demand lookup against the full AIS vessels layer (not just the ones
+  // currently on screen) — used by the data assistant to answer questions
+  // scoped to the harbour as a whole, e.g. counts or name searches.
+  const queryVessels = useCallback(async (whereClause = "1=1") => {
+    const vesselsLayer = vesselsLayerRef.current;
+    if (!vesselsLayer) return [];
+    try {
+      const { features } = await vesselsLayer.queryFeatures({
+        where: whereClause,
+        outFields: VESSEL_OUT_FIELDS,
+        returnGeometry: true,
+      });
+      return features
+        .map(mapVesselFeature)
+        .sort((a, b) => a.type.localeCompare(b.type) || a.name.localeCompare(b.name));
+    } catch (err) {
+      console.error("Failed to query vessels", err);
+      return [];
+    }
+  }, []);
 
   return {
     status,
@@ -669,5 +682,6 @@ export function useArcGISView(
     selectVessel,
     selectMovementVessel,
     clearSelectedVessel,
+    queryVessels,
   };
 }
