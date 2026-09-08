@@ -160,3 +160,40 @@
   font-style: italic;
   color: var(--text-muted);
 }
+
+.info-panel__account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-glass);
+}
+
+.info-panel__account p {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.info-panel__account strong {
+  color: var(--text-primary);
+}
+
+.info-panel__sign-out {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.info-panel__sign-out:hover,
+.info-panel__sign-out:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+}

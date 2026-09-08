@@ -5,8 +5,17 @@ import googleLogo from "../assets/google-logo.png";
 import openMeteoLogo from "../assets/open-meteo-logo.svg";
 import "./LoadingScreen.css";
 
-export default function LoadingScreen({ status, error, hasAcknowledgedDisclaimer, onProceed }) {
+export default function LoadingScreen({
+  status,
+  error,
+  hasAcknowledgedDisclaimer,
+  onProceed,
+  authStatus,
+  authError,
+  onSignIn,
+}) {
   const isError = status === "error";
+  const needsSignIn = hasAcknowledgedDisclaimer && authStatus !== "signed-in";
 
   return (
     <div className="loading-screen" role="status" aria-live="polite">
@@ -34,7 +43,7 @@ export default function LoadingScreen({ status, error, hasAcknowledgedDisclaimer
           </div>
         </div>
 
-        {hasAcknowledgedDisclaimer && (
+        {hasAcknowledgedDisclaimer && !needsSignIn && (
           <div className="loading-screen__mark" aria-hidden="true">
             <span className="loading-screen__ring" />
             <span className="loading-screen__dot" />
@@ -49,6 +58,24 @@ export default function LoadingScreen({ status, error, hasAcknowledgedDisclaimer
             <button type="button" className="loading-screen__proceed" onClick={onProceed}>
               Click to proceed
             </button>
+          </>
+        ) : needsSignIn ? (
+          <>
+            <p className="loading-screen__disclaimer">
+              {authStatus === "error"
+                ? authError
+                : "Sign in with your ArcGIS Online account to continue."}
+            </p>
+            {authStatus !== "error" && (
+              <button
+                type="button"
+                className="loading-screen__proceed"
+                onClick={onSignIn}
+                disabled={authStatus === "checking"}
+              >
+                {authStatus === "checking" ? "Checking sign-in status…" : "Sign in with ArcGIS"}
+              </button>
+            )}
           </>
         ) : isError ? (
           <p className="loading-screen__message loading-screen__message--error">

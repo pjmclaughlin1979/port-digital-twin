@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useArcGISView } from "./hooks/useArcGISView.js";
+import { useArcGISAuth } from "./hooks/useArcGISAuth.js";
 import LoadingScreen from "./components/LoadingScreen.jsx";
 import SidePanel from "./components/SidePanel.jsx";
 import AssistantPanel from "./components/AssistantPanel.jsx";
@@ -23,6 +24,9 @@ export default function App() {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [hasAcknowledgedDisclaimer, setHasAcknowledgedDisclaimer] = useState(false);
 
+  const { status: authStatus, username, error: authError, signIn, signOut } = useArcGISAuth();
+  const isSignedIn = authStatus === "signed-in";
+
   const {
     status,
     error,
@@ -43,7 +47,7 @@ export default function App() {
     mapContainerRef,
     legendContainerRef,
     layerListContainerRef,
-    hasAcknowledgedDisclaimer
+    hasAcknowledgedDisclaimer && isSignedIn
   );
 
   const handleSelectVessel = (vessel) => {
@@ -59,16 +63,19 @@ export default function App() {
         aria-hidden={status !== "ready"}
       />
 
-      {status !== "ready" && (
+      {(status !== "ready" || !isSignedIn) && (
         <LoadingScreen
           status={status}
           error={error}
           hasAcknowledgedDisclaimer={hasAcknowledgedDisclaimer}
           onProceed={() => setHasAcknowledgedDisclaimer(true)}
+          authStatus={authStatus}
+          authError={authError}
+          onSignIn={signIn}
         />
       )}
 
-      {status === "ready" && (
+      {status === "ready" && isSignedIn && (
         <button
           type="button"
           className="widget-toggle widget-toggle--carousel"
@@ -130,6 +137,8 @@ export default function App() {
         isOpen={isInfoOpen}
         onToggle={() => setIsInfoOpen((open) => !open)}
         status={status}
+        username={username}
+        onSignOut={signOut}
       />
     </div>
   );

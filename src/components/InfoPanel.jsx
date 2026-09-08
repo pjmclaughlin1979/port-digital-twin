@@ -1,7 +1,7 @@
 import { InfoIcon, CloseWidgetsIcon } from "./icons.jsx";
 import "./InfoPanel.css";
 
-export default function InfoPanel({ isOpen, onToggle, status }) {
+export default function InfoPanel({ isOpen, onToggle, status, username, onSignOut }) {
   return (
     <>
       {status === "ready" && (
@@ -95,6 +95,17 @@ export default function InfoPanel({ isOpen, onToggle, status }) {
               <p className="info-panel__disclaimer">
                 This application is for demonstration purposes only.
               </p>
+
+              {username && (
+                <section className="info-panel__section info-panel__account">
+                  <p>
+                    Signed in as <strong>{username}</strong>
+                  </p>
+                  <button type="button" className="info-panel__sign-out" onClick={onSignOut}>
+                    Sign out
+                  </button>
+                </section>
+              )}
             </div>
           </aside>
         </div>
