@@ -55,6 +55,11 @@ export default function AssistantPanel({
     ask(input);
   };
 
+  const reset = () => {
+    setMessages([]);
+    setInput("");
+  };
+
   return (
     <>
       {status === "ready" && (
@@ -86,15 +91,28 @@ export default function AssistantPanel({
                   Ask about vessels in the harbour or the shipping schedule
                 </p>
               </div>
-              <button
-                type="button"
-                className="assistant-panel__close"
-                onClick={onToggle}
-                aria-label="Close Data Assistant"
-                title="Close"
-              >
-                <CloseWidgetsIcon />
-              </button>
+              <div className="assistant-panel__header-actions">
+                {messages.length > 0 && (
+                  <button
+                    type="button"
+                    className="assistant-panel__reset"
+                    onClick={reset}
+                    disabled={isThinking}
+                    title="Start over"
+                  >
+                    Reset
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="assistant-panel__close"
+                  onClick={onToggle}
+                  aria-label="Close Data Assistant"
+                  title="Close"
+                >
+                  <CloseWidgetsIcon />
+                </button>
+              </div>
             </header>
 
             <div className="assistant-panel__messages" ref={messagesRef}>

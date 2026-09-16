@@ -6,6 +6,7 @@ import SidePanel from "./components/SidePanel.jsx";
 import AssistantPanel from "./components/AssistantPanel.jsx";
 import BookmarksPanel from "./components/BookmarksPanel.jsx";
 import LayerListPanel from "./components/LayerListPanel.jsx";
+import BasemapPanel from "./components/BasemapPanel.jsx";
 import InfoPanel from "./components/InfoPanel.jsx";
 import WidgetCarousel from "./components/WidgetCarousel.jsx";
 import VesselDetailPanel from "./components/VesselDetailPanel.jsx";
@@ -16,10 +17,12 @@ export default function App() {
   const mapContainerRef = useRef(null);
   const legendContainerRef = useRef(null);
   const layerListContainerRef = useRef(null);
+  const basemapGalleryContainerRef = useRef(null);
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [isAssistantOpen, setIsAssistantOpen] = useState(false);
   const [isCarouselOpen, setIsCarouselOpen] = useState(true);
   const [isLayerListOpen, setIsLayerListOpen] = useState(false);
+  const [isBasemapOpen, setIsBasemapOpen] = useState(false);
   const [isBookmarksOpen, setIsBookmarksOpen] = useState(true);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [hasAcknowledgedDisclaimer, setHasAcknowledgedDisclaimer] = useState(false);
@@ -47,6 +50,7 @@ export default function App() {
     mapContainerRef,
     legendContainerRef,
     layerListContainerRef,
+    basemapGalleryContainerRef,
     hasAcknowledgedDisclaimer && isSignedIn
   );
 
@@ -130,6 +134,13 @@ export default function App() {
         onToggle={() => setIsLayerListOpen((open) => !open)}
         containerRef={layerListContainerRef}
         legendContainerRef={legendContainerRef}
+        status={status}
+      />
+
+      <BasemapPanel
+        isOpen={isBasemapOpen}
+        onToggle={() => setIsBasemapOpen((open) => !open)}
+        containerRef={basemapGalleryContainerRef}
         status={status}
       />
 

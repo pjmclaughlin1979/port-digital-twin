@@ -142,6 +142,31 @@ export function AssistantIcon(props) {
   );
 }
 
+// A globe with latitude/longitude lines, for the basemap gallery toggle —
+// distinct from the stacked-layers glyph used for the Layers panel.
+export function BasemapIcon(props) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...props}
+    >
+      <circle cx="12" cy="12" r="8.5" />
+      <ellipse cx="12" cy="12" rx="3.6" ry="8.5" />
+      <path d="M3.5 12h17" />
+      <path d="M4.8 7.5h14.4" />
+      <path d="M4.8 16.5h14.4" />
+    </svg>
+  );
+}
+
 // A simple "app grid" glyph for the collapsed/hidden state — the same
 // shorthand ArcGIS Online uses to represent a set of widgets/panels.
 export function ShowWidgetsIcon(props) {

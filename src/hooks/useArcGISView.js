@@ -96,6 +96,7 @@ export function useArcGISView(
   mapContainerRef,
   legendContainerRef,
   layerListContainerRef,
+  basemapGalleryContainerRef,
   enabled = true
 ) {
   const viewRef = useRef(null);
@@ -126,6 +127,7 @@ export function useArcGISView(
     let view = null;
     let legendWidget = null;
     let layerListWidget = null;
+    let basemapGalleryWidget = null;
     let stationaryHandle = null;
     let weatherStationaryHandle = null;
     let refreshIntervalId = null;
@@ -190,6 +192,7 @@ export function useArcGISView(
           LegendModule,
           ExpandModule,
           LayerListModule,
+          BasemapGalleryModule,
           configModule,
           reactiveUtilsModule,
         ] = await Promise.all([
@@ -198,6 +201,7 @@ export function useArcGISView(
           import("@arcgis/core/widgets/Legend.js"),
           import("@arcgis/core/widgets/Expand.js"),
           import("@arcgis/core/widgets/LayerList.js"),
+          import("@arcgis/core/widgets/BasemapGallery.js"),
           import("@arcgis/core/config.js"),
           import("@arcgis/core/core/reactiveUtils.js"),
           import("@arcgis/core/assets/esri/themes/dark/main.css"),
@@ -231,6 +235,7 @@ export function useArcGISView(
         const Legend = LegendModule.default;
         const Expand = ExpandModule.default;
         const LayerList = LayerListModule.default;
+        const BasemapGallery = BasemapGalleryModule.default;
         const reactiveUtils = reactiveUtilsModule;
 
         const webscene = new WebScene({
@@ -298,6 +303,17 @@ export function useArcGISView(
           layerListWidget = new LayerList({
             view,
             container: layerListContainerRef.current,
+          });
+        }
+
+        if (basemapGalleryContainerRef?.current) {
+          // No `source` given: this pulls from the signed-in user's
+          // ArcGIS Online organization's basemap gallery group (falling
+          // back to Esri's default basemaps), which is fine now that
+          // sign-in is required to use the app at all.
+          basemapGalleryWidget = new BasemapGallery({
+            view,
+            container: basemapGalleryContainerRef.current,
           });
         }
 
@@ -507,6 +523,7 @@ export function useArcGISView(
       weatherStationaryHandle?.remove();
       legendWidget?.destroy();
       layerListWidget?.destroy();
+      basemapGalleryWidget?.destroy();
       view?.destroy();
       viewRef.current = null;
       applySunlightRef.current = null;
