@@ -4,9 +4,10 @@ dev-dist
 .DS_Store
 *.local
 
-# Unrelated project that happens to live alongside this one; it has its
-# own separate git repository and should never be tracked here.
+# Separate projects that happen to live alongside this one; each has its
+# own git repository and should never be tracked here.
 /capacity-map/
+/port-ops-twin/
 
 # Personal Claude Code permission overrides, not shared project config.
 .claude/settings.local.json

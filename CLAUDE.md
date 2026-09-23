@@ -124,6 +124,7 @@ serve cached/stale data.
 ## Repo layout gotchas
 
 This working directory contains other, unrelated sibling projects that are **not** part of this
-app and should not be touched when working on it: `/capacity-map/` (gitignored) and
-`/get-ireland-active/` (untracked, has its own separate git repository). Don't stage, commit, or
+app and should not be touched when working on it: `/capacity-map/` and `/port-ops-twin/`
+(gitignored, each with its own git repository) and `/get-ireland-active/` (untracked, has its
+own separate git repository). Don't stage, commit, or
 otherwise treat files under these as part of this project.
